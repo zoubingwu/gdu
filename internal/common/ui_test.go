@@ -66,3 +66,6 @@ func (a *MockedAnalyzer) SetFollowSymlinks(v bool) {
 func (a *MockedAnalyzer) SetShowAnnexedSize(v bool) {
 	a.ShowAnnexedSize = v
 }
+
+// Cancel does nothing
+func (a *MockedAnalyzer) Cancel() {}

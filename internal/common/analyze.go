@@ -20,4 +20,5 @@ type Analyzer interface {
 	GetProgressChan() chan CurrentProgress
 	GetDone() SignalGroup
 	ResetProgress()
+	Cancel()  // Cancel the analysis gracefully
 }

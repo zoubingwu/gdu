@@ -87,6 +87,9 @@ func (a *MockedAnalyzer) SetFollowSymlinks(v bool) {}
 // SetShowAnnexedSize does nothing
 func (a *MockedAnalyzer) SetShowAnnexedSize(v bool) {}
 
+// Cancel does nothing
+func (a *MockedAnalyzer) Cancel() {}
+
 // ItemFromDirWithErr returns error
 func ItemFromDirWithErr(dir, file fs.Item) error {
 	return errors.New("Failed")

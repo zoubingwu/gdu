@@ -26,6 +26,8 @@ type StoredAnalyzer struct {
 	storagePath      string
 	followSymlinks   bool
 	gitAnnexedSize   bool
+	cancelled        bool
+	cancelMutex      sync.Mutex
 }
 
 // CreateStoredAnalyzer returns Analyzer
@@ -70,6 +72,21 @@ func (a *StoredAnalyzer) ResetProgress() {
 	a.progressDoneChan = make(chan struct{})
 	a.doneChan = make(common.SignalGroup)
 	a.wait = (&WaitGroup{}).Init()
+	a.cancelled = false
+}
+
+// Cancel cancels the analysis gracefully
+func (a *StoredAnalyzer) Cancel() {
+	a.cancelMutex.Lock()
+	defer a.cancelMutex.Unlock()
+
+	if a.cancelled {
+		return
+	}
+
+	a.cancelled = true
+	// Send cancellation signal to wait group
+	a.wait.Cancel()
 }
 
 // AnalyzeDir analyzes given path
@@ -113,6 +130,27 @@ func (a *StoredAnalyzer) processDir(path string) *StoredDir {
 		dirCount  int
 	)
 
+	// Check if cancelled before starting
+	a.cancelMutex.Lock()
+	if a.cancelled {
+		a.cancelMutex.Unlock()
+		// Return empty directory if cancelled
+		dir := &StoredDir{
+			Dir: &Dir{
+				File: &File{
+					Name: filepath.Base(path),
+					Flag: '!',
+				},
+				ItemCount: 1,
+				Files:     make(fs.Files, 0),
+			},
+		}
+		a.wait.Add(1)
+		a.wait.Done()
+		return dir
+	}
+	a.cancelMutex.Unlock()
+
 	a.wait.Add(1)
 
 	files, err := os.ReadDir(path)
@@ -136,6 +174,14 @@ func (a *StoredAnalyzer) processDir(path string) *StoredDir {
 	setDirPlatformSpecificAttrs(dir.Dir, path)
 
 	for _, f := range files {
+		// Check cancellation periodically
+		a.cancelMutex.Lock()
+		if a.cancelled {
+			a.cancelMutex.Unlock()
+			break
+		}
+		a.cancelMutex.Unlock()
+
 		name := f.Name()
 		entryPath := filepath.Join(path, name)
 		if f.IsDir() {
@@ -186,10 +232,17 @@ func (a *StoredAnalyzer) processDir(path string) *StoredDir {
 		log.Print(err.Error())
 	}
 
-	a.progressChan <- common.CurrentProgress{
-		CurrentItemName: path,
-		ItemCount:       len(files),
-		TotalSize:       totalSize,
+	// Check cancellation before sending final progress
+	a.cancelMutex.Lock()
+	if !a.cancelled {
+		a.cancelMutex.Unlock()
+		a.progressChan <- common.CurrentProgress{
+			CurrentItemName: path,
+			ItemCount:       len(files),
+			TotalSize:       totalSize,
+		}
+	} else {
+		a.cancelMutex.Unlock()
 	}
 
 	a.wait.Done()

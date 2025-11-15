@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"sync"
 
 	"github.com/dundee/gdu/v5/internal/common"
 	"github.com/dundee/gdu/v5/pkg/fs"
@@ -12,15 +13,18 @@ import (
 
 // SequentialAnalyzer implements Analyzer
 type SequentialAnalyzer struct {
-	progress         *common.CurrentProgress
-	progressChan     chan common.CurrentProgress
-	progressOutChan  chan common.CurrentProgress
-	progressDoneChan chan struct{}
-	doneChan         common.SignalGroup
-	wait             *WaitGroup
-	ignoreDir        common.ShouldDirBeIgnored
-	followSymlinks   bool
-	gitAnnexedSize   bool
+	progress            *common.CurrentProgress
+	progressChan        chan common.CurrentProgress
+	progressOutChan     chan common.CurrentProgress
+	progressDoneChan    chan struct{}
+	doneChan            common.SignalGroup
+	wait                *WaitGroup
+	ignoreDir           common.ShouldDirBeIgnored
+	followSymlinks      bool
+	gitAnnexedSize      bool
+	cancelled           bool
+	cancelMutex         sync.Mutex
+	progressDoneOnce    sync.Once
 }
 
 // CreateSeqAnalyzer returns Analyzer
@@ -65,6 +69,25 @@ func (a *SequentialAnalyzer) ResetProgress() {
 	a.progressOutChan = make(chan common.CurrentProgress, 1)
 	a.progressDoneChan = make(chan struct{})
 	a.doneChan = make(common.SignalGroup)
+	a.wait = (&WaitGroup{}).Init()
+	a.cancelled = false
+}
+
+// Cancel cancels the analysis gracefully
+func (a *SequentialAnalyzer) Cancel() {
+	a.cancelMutex.Lock()
+	defer a.cancelMutex.Unlock()
+
+	if a.cancelled {
+		return
+	}
+
+	a.cancelled = true
+	// Send cancellation signal to wait group and progress channels
+	a.wait.Cancel()
+	a.progressDoneOnce.Do(func() {
+		close(a.progressDoneChan)
+	})
 }
 
 // AnalyzeDir analyzes given path
@@ -81,9 +104,14 @@ func (a *SequentialAnalyzer) AnalyzeDir(
 	go a.updateProgress()
 	dir := a.processDir(path)
 
-	dir.BasePath = filepath.Dir(path)
+	// Safely send to progressDoneChan only if not cancelled
+	a.cancelMutex.Lock()
+	cancelled := a.cancelled
+	a.cancelMutex.Unlock()
 
-	a.progressDoneChan <- struct{}{}
+	if !cancelled {
+		a.progressDoneChan <- struct{}{}
+	}
 	a.doneChan.Broadcast()
 
 	return dir
@@ -97,6 +125,27 @@ func (a *SequentialAnalyzer) processDir(path string) *Dir {
 		info      os.FileInfo
 		dirCount  int
 	)
+
+	// Check if cancelled before starting
+	a.cancelMutex.Lock()
+	if a.cancelled {
+		a.cancelMutex.Unlock()
+		// Return empty directory if cancelled
+		dir := &Dir{
+			File: &File{
+				Name: filepath.Base(path),
+				Flag: '!',
+			},
+			ItemCount: 1,
+			Files:     make(fs.Files, 0),
+		}
+		a.wait.Add(1)
+		a.wait.Done()
+		return dir
+	}
+	a.cancelMutex.Unlock()
+
+	a.wait.Add(1)
 
 	files, err := os.ReadDir(path)
 	if err != nil {
@@ -113,7 +162,21 @@ func (a *SequentialAnalyzer) processDir(path string) *Dir {
 	}
 	setDirPlatformSpecificAttrs(dir, path)
 
+	// Set BasePath early so all child paths are resolved correctly
+	// Only set BasePath for absolute paths to ensure correct absolute output
+	if filepath.IsAbs(path) {
+		dir.BasePath = filepath.Dir(path)
+	}
+
 	for _, f := range files {
+		// Check cancellation periodically
+		a.cancelMutex.Lock()
+		if a.cancelled {
+			a.cancelMutex.Unlock()
+			break
+		}
+		a.cancelMutex.Unlock()
+
 		name := f.Name()
 		entryPath := filepath.Join(path, name)
 		if f.IsDir() {
@@ -158,11 +221,20 @@ func (a *SequentialAnalyzer) processDir(path string) *Dir {
 		}
 	}
 
-	a.progressChan <- common.CurrentProgress{
-		CurrentItemName: path,
-		ItemCount:       len(files),
-		TotalSize:       totalSize,
+	// Check cancellation before sending final progress
+	a.cancelMutex.Lock()
+	if !a.cancelled {
+		a.cancelMutex.Unlock()
+		a.progressChan <- common.CurrentProgress{
+			CurrentItemName: path,
+			ItemCount:       len(files),
+			TotalSize:       totalSize,
+		}
+	} else {
+		a.cancelMutex.Unlock()
 	}
+
+	a.wait.Done()
 	return dir
 }
 

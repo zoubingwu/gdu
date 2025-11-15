@@ -2,6 +2,7 @@ NAME := gdu
 MAJOR_VER := v5
 PACKAGE := github.com/dundee/$(NAME)/$(MAJOR_VER)
 CMD_GDU := cmd/gdu
+CMD_SERVER := cmd/server
 VERSION := $(shell git describe --tags 2>/dev/null)
 NAMEVER := $(NAME)-$(subst v,,$(VERSION))
 DATE := $(shell date +'%Y-%m-%d')
@@ -21,6 +22,9 @@ all: clean tarball build-all build-docker man clean-uncompressed-dist shasums
 run:
 	go run $(PACKAGE)/$(CMD_GDU)
 
+run-server:
+	go run $(PACKAGE)/$(CMD_SERVER)
+
 vendor: go.mod go.sum
 	go mod vendor
 
@@ -37,6 +41,16 @@ build-static:
 	@echo "Version: " $(VERSION)
 	mkdir -p dist
 	GOFLAGS="$(GOFLAGS_STATIC)" CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o dist/$(NAME) $(PACKAGE)/$(CMD_GDU)
+
+build-server:
+	@echo "Building $(NAME)-server " $(VERSION)
+	mkdir -p dist
+	GOFLAGS="$(GOFLAGS)" CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o dist/$(NAME)-server $(PACKAGE)/$(CMD_SERVER)
+
+build-server-static:
+	@echo "Building $(NAME)-server (static) " $(VERSION)
+	mkdir -p dist
+	GOFLAGS="$(GOFLAGS_STATIC)" CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o dist/$(NAME)-server $(PACKAGE)/$(CMD_SERVER)
 
 build-docker:
 	@echo "Version: " $(VERSION)

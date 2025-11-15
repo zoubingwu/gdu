@@ -146,7 +146,10 @@ type Dir struct {
 }
 
 // AddFile add item to files
+// It is safe to call this function from multiple goroutines
 func (f *Dir) AddFile(item fs.Item) {
+	f.m.Lock()
+	defer f.m.Unlock()
 	f.Files = append(f.Files, item)
 }
 
@@ -203,11 +206,19 @@ func (f *Dir) GetItemStats(linkedItems fs.HardLinkedItems) (itemCount int, size,
 }
 
 // UpdateStats recursively updates size and item count
+// It is safe to call this function while AddFile is being called from other goroutines
 func (f *Dir) UpdateStats(linkedItems fs.HardLinkedItems) {
 	totalSize := int64(4096)
 	totalUsage := int64(4096)
 	var itemCount int
-	for _, entry := range f.GetFiles() {
+
+	// Safely get a copy of the files slice while holding the read lock
+	f.m.RLock()
+	files := make(fs.Files, len(f.Files))
+	copy(files, f.Files)
+	f.m.RUnlock()
+
+	for _, entry := range files {
 		count, size, usage := entry.GetItemStats(linkedItems)
 		totalSize += size
 		totalUsage += usage

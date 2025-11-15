@@ -134,13 +134,9 @@ Files and directories may be prefixed by a one-character
 flag with following meaning:
 
 * `!` An error occurred while reading this directory.
-
 * `.` An error occurred while reading a subdirectory, size may be not correct.
-
 * `@` File is symlink or socket.
-
 * `H` Same file was already counted (hard link).
-
 * `e` Directory is empty.
 
 ## Configuration file
@@ -269,33 +265,33 @@ See `benchmark` target in [Makefile](Makefile) for more info.
 
 Filesystem cache was cleared using `sync; echo 3 | sudo tee /proc/sys/vm/drop_caches`.
 
-| Command | Mean [s] | Min [s] | Max [s] | Relative |
-|:---|---:|---:|---:|---:|
-| `diskus ~` | 3.074 ± 0.010 | 3.056 | 3.094 | 1.00 |
-| `gdu -npc ~` | 3.133 ± 0.013 | 3.116 | 3.159 | 1.02 ± 0.01 |
-| `gdu -gnpc ~` | 3.157 ± 0.013 | 3.139 | 3.180 | 1.03 ± 0.01 |
-| `pdu ~` | 3.772 ± 0.149 | 3.630 | 4.071 | 1.23 ± 0.05 |
-| `dust -d0 ~` | 4.001 ± 0.162 | 3.786 | 4.305 | 1.30 ± 0.05 |
-| `dua ~` | 5.315 ± 3.210 | 4.068 | 14.447 | 1.73 ± 1.04 |
-| `gdu -npc --use-storage ~` | 12.690 ± 0.527 | 11.325 | 13.091 | 4.13 ± 0.17 |
-| `du -hs ~` | 14.940 ± 0.064 | 14.852 | 15.048 | 4.86 ± 0.03 |
-| `duc index ~` | 15.501 ± 0.136 | 15.386 | 15.849 | 5.04 ± 0.05 |
-| `ncdu -0 -o /dev/null ~` | 15.688 ± 0.053 | 15.610 | 15.789 | 5.10 ± 0.02 |
+| Command                      |        Mean [s] | Min [s] | Max [s] |     Relative |
+| :--------------------------- | --------------: | ------: | ------: | -----------: |
+| `diskus ~`                 |  3.074 ± 0.010 |   3.056 |   3.094 |         1.00 |
+| `gdu -npc ~`               |  3.133 ± 0.013 |   3.116 |   3.159 | 1.02 ± 0.01 |
+| `gdu -gnpc ~`              |  3.157 ± 0.013 |   3.139 |   3.180 | 1.03 ± 0.01 |
+| `pdu ~`                    |  3.772 ± 0.149 |   3.630 |   4.071 | 1.23 ± 0.05 |
+| `dust -d0 ~`               |  4.001 ± 0.162 |   3.786 |   4.305 | 1.30 ± 0.05 |
+| `dua ~`                    |  5.315 ± 3.210 |   4.068 |  14.447 | 1.73 ± 1.04 |
+| `gdu -npc --use-storage ~` | 12.690 ± 0.527 |  11.325 |  13.091 | 4.13 ± 0.17 |
+| `du -hs ~`                 | 14.940 ± 0.064 |  14.852 |  15.048 | 4.86 ± 0.03 |
+| `duc index ~`              | 15.501 ± 0.136 |  15.386 |  15.849 | 5.04 ± 0.05 |
+| `ncdu -0 -o /dev/null ~`   | 15.688 ± 0.053 |  15.610 |  15.789 | 5.10 ± 0.02 |
 
 ### Warm cache
 
-| Command | Mean [ms] | Min [ms] | Max [ms] | Relative |
-|:---|---:|---:|---:|---:|
-| `diskus ~` | 211.4 ± 3.7 | 206.4 | 219.3 | 1.00 |
-| `pdu ~` | 221.8 ± 2.4 | 219.3 | 226.3 | 1.05 ± 0.02 |
-| `dust -d0 ~` | 363.6 ± 5.4 | 357.3 | 373.2 | 1.72 ± 0.04 |
-| `gdu -npc ~` | 434.3 ± 3.4 | 426.0 | 437.8 | 2.05 ± 0.04 |
-| `dua ~` | 451.2 ± 4.2 | 444.9 | 457.9 | 2.13 ± 0.04 |
-| `gdu -gnpc ~` | 521.0 ± 14.0 | 510.9 | 558.5 | 2.46 ± 0.08 |
-| `du -hs ~` | 809.4 ± 3.2 | 804.8 | 816.0 | 3.83 ± 0.07 |
-| `duc index ~` | 952.3 ± 4.8 | 946.0 | 961.7 | 4.50 ± 0.08 |
-| `ncdu -0 -o /dev/null ~` | 1432.8 ± 3.4 | 1428.0 | 1439.0 | 6.78 ± 0.12 |
-| `gdu -npc --use-storage ~` | 9950.0 ± 474.1 | 9117.5 | 10647.4 | 47.07 ± 2.39 |
+| Command                      |       Mean [ms] | Min [ms] | Max [ms] |      Relative |
+| :--------------------------- | --------------: | -------: | -------: | ------------: |
+| `diskus ~`                 |    211.4 ± 3.7 |    206.4 |    219.3 |          1.00 |
+| `pdu ~`                    |    221.8 ± 2.4 |    219.3 |    226.3 |  1.05 ± 0.02 |
+| `dust -d0 ~`               |    363.6 ± 5.4 |    357.3 |    373.2 |  1.72 ± 0.04 |
+| `gdu -npc ~`               |    434.3 ± 3.4 |    426.0 |    437.8 |  2.05 ± 0.04 |
+| `dua ~`                    |    451.2 ± 4.2 |    444.9 |    457.9 |  2.13 ± 0.04 |
+| `gdu -gnpc ~`              |   521.0 ± 14.0 |    510.9 |    558.5 |  2.46 ± 0.08 |
+| `du -hs ~`                 |    809.4 ± 3.2 |    804.8 |    816.0 |  3.83 ± 0.07 |
+| `duc index ~`              |    952.3 ± 4.8 |    946.0 |    961.7 |  4.50 ± 0.08 |
+| `ncdu -0 -o /dev/null ~`   |   1432.8 ± 3.4 |   1428.0 |   1439.0 |  6.78 ± 0.12 |
+| `gdu -npc --use-storage ~` | 9950.0 ± 474.1 |   9117.5 |  10647.4 | 47.07 ± 2.39 |
 
 ## Alternatives
 
@@ -306,6 +302,210 @@ Filesystem cache was cleared using `sync; echo 3 | sudo tee /proc/sys/vm/drop_ca
 * [duc](https://duc.zevv.nl/) - Collection of tools with many possibilities for inspecting and visualising disk usage
 * [dust](https://github.com/bootandy/dust) - Tool written in `Rust` showing tree like structures of disk usage
 * [pdu](https://github.com/KSXGitHub/parallel-disk-usage) - Tool written in `Rust` showing tree like structures of disk usage
+
+## Notes
+
+[HDD icon created by Nikita Golubev - Flaticon](https://www.flaticon.com/free-icons/hdd)
+
+## Socket Server API
+
+### Overview
+
+Gdu provides Unix socket server mode for programmatic access:
+
+- **Protocol**: Length-prefixed JSON with newline termination
+- **Format**: `[4 bytes: length][N bytes: JSON][1 byte: newline]`
+- **Address**: Unix domain socket (e.g., `/tmp/gdu.sock`)
+
+### Installation & Running
+
+```bash
+# Build server
+make build-server
+
+# Run with Unix socket
+./gdu-server -socket /tmp/gdu.sock
+```
+
+### Request Format
+
+```json
+{
+  "id": "unique-request-id",
+  "method": "scan|progress|cancel|directory",
+  "params": { ... }
+}
+```
+
+### API Methods
+
+#### 1. `scan` - Start directory scanning
+
+**Request:**
+
+```json
+{
+  "id": "1",
+  "method": "scan",
+  "params": {"path": "/path/to/scan"}
+}
+```
+
+**Response:**
+
+```json
+{
+  "id": "1",
+  "success": true,
+  "data": {"started": true}
+}
+```
+
+#### 2. `progress` - Get scanning progress
+
+**Request:**
+
+```json
+{
+  "id": "2",
+  "method": "progress",
+  "params": {}
+}
+```
+
+**Response:**
+
+```json
+{
+  "id": "2",
+  "success": true,
+  "data": {
+    "isScanning": true,
+    "currentItemName": "/path/to/current",
+    "itemCount": 1250,
+    "totalSize": 4294967296
+  }
+}
+```
+
+**Fields:**
+
+- `isScanning`: boolean
+- `currentItemName`: string - Currently scanning item path
+- `itemCount`: number - Items scanned
+- `totalSize`: number - Total size in bytes
+
+#### 3. `cancel` - Cancel scanning
+
+**Request:**
+
+```json
+{
+  "id": "3",
+  "method": "cancel",
+  "params": {}
+}
+```
+
+**Response:**
+
+```json
+{
+  "id": "3",
+  "success": true,
+  "data": {"cancelled": true}
+}
+```
+
+#### 4. `directory` - Get directory information
+
+**Request:**
+
+```json
+{
+  "id": "4",
+  "method": "directory",
+  "params": {
+    "path": "/optional/path",
+    "depth": 1
+  }
+}
+```
+
+**Parameters:**
+
+- `path`: string - Directory path (empty for root)
+- `depth`: number - Recursion depth (0=self, 1=children, etc.)
+
+**Response:**
+
+```json
+{
+  "id": "4",
+  "success": true,
+  "data": {
+    "name": "Documents",
+    "path": "/Users/zou/Documents",
+    "size": 10737418240,
+    "physicalSize": 9663676416,
+    "itemCount": 42,
+    "flag": "/",
+    "mtime": 1704067200,
+    "isDir": true,
+    "children": [
+      {
+        "name": "project1",
+        "path": "/Users/zou/Documents/project1",
+        "size": 5368709120,
+        "physicalSize": 4831838208,
+        "itemCount": 15,
+        "flag": "/",
+        "mtime": 1703980800,
+        "isDir": true,
+        "children": []
+      }
+    ]
+  }
+}
+```
+
+**Directory Fields:**
+
+- `name`: string - File/directory name
+- `path`: string - Full path
+- `size`: number - Logical size (bytes)
+- `physicalSize`: number - Physical size (bytes)
+- `itemCount`: number - Number of items
+- `flag`: string - Type flag ("/" for directory)
+- `mtime`: number - Modification time (Unix timestamp)
+- `isDir`: boolean - Whether directory
+- `children`: array - Child items
+
+### Response Format
+
+```json
+{
+  "id": "request-id",
+  "success": true|false,
+  "data": {...}|null,
+  "error": "error message"|null
+}
+```
+
+### Protocol Example
+
+**Request:** (hex dump)
+
+```
+0000: 00 00 00 2a 7b 22 69 64 22 3a 22 31 22 2c 22 6d ...*{"id":"1","m
+0010: 65 74 68 6f 64 22 3a 22 70 72 6f 67 72 65 73 73 ethod":"progress
+0020: 22 2c 22 70 61 72 61 6d 73 22 3a 7b 7d 7d 0a    ","params":{}}.
+
+Breakdown:
+- 00 00 00 2a: Length = 42 bytes
+- JSON data: {"id":"1","method":"progress","params":{}}
+- 0a: Newline
+```
 
 ## Notes
 
